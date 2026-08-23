@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to build AAPS - simple instructions</title>
+<style>
+  :root{
+    --bg:#FBF3E4;        /* cream - less glare than white */
+    --card:#FFFBF2;
+    --ink:#2B2B2B;       /* not pure black */
+    --blue:#1F5C8B;
+    --green:#1E6B45;
+    --red:#9B2226;
+    --amber:#8A5A00;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Verdana","Tahoma","Segoe UI",sans-serif;
+    font-size:21px;
+    line-height:2.0;
+    letter-spacing:0.03em;
+    word-spacing:0.12em;
+    margin:0;
+    padding:24px 16px 80px;
+  }
+  .wrap{max-width:680px;margin:0 auto}
+  h1{
+    font-size:34px;line-height:1.5;color:var(--blue);
+    margin:0 0 8px;border-bottom:5px solid var(--blue);padding-bottom:14px;
+  }
+  h2{
+    font-size:27px;line-height:1.5;color:var(--blue);
+    margin:44px 0 14px;
+  }
+  p{margin:0 0 18px}
+  .lead{font-size:23px}
+  .card{
+    background:var(--card);border:2px solid #E0D5BC;border-radius:14px;
+    padding:20px 22px;margin:0 0 20px;
+  }
+  ul{margin:0;padding-inline-start:26px}
+  li{margin-bottom:14px}
+  .step{
+    background:var(--card);border:2px solid #E0D5BC;border-radius:14px;
+    padding:18px 22px;margin-bottom:18px;display:flex;gap:18px;align-items:flex-start;
+  }
+  .num{
+    flex:0 0 auto;width:52px;height:52px;border-radius:50%;
+    background:var(--blue);color:#fff;font-size:26px;font-weight:bold;
+    display:flex;align-items:center;justify-content:center;line-height:1;
+  }
+  .step .txt{flex:1 1 auto}
+  .file{
+    background:#EFE7D4;border:2px dashed #B9A981;border-radius:8px;
+    padding:2px 10px;font-family:"Courier New",monospace;font-size:20px;
+    direction:ltr;display:inline-block;white-space:nowrap;
+  }
+  .warn{background:#FFF3D6;border:3px solid var(--amber)}
+  .warn h2{color:var(--amber);margin-top:0}
+  .stop{background:#FBE4E4;border:3px solid var(--red)}
+  .stop h2{color:var(--red);margin-top:0}
+  .good{background:#E6F3EA;border:3px solid var(--green)}
+  .good h2{color:var(--green);margin-top:0}
+  .big{font-size:24px;font-weight:bold}
+  hr{border:none;border-top:3px solid #E0D5BC;margin:44px 0}
+  .quiet{font-size:18px;color:#5A5348}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>How to build AAPS<br>Simple instructions</h1>
+
+<p class="lead">
+This guide explains how to make an AAPS file for your phone.
+</p>
+<p class="lead">
+You do not need to know anything about computers.
+</p>
+<p class="lead">
+You only have to click, and wait.
+</p>
+
+<hr>
+
+<h2>What you need before you start</h2>
+
+<div class="card">
+<ul>
+  <li>A PC with <span class="big">Windows 10</span> or <span class="big">Windows 11</span></li>
+  <li>Free disk space: <span class="big">30 GB</span></li>
+  <li>An internet connection</li>
+  <li>Time: about <span class="big">an hour</span> the first time</li>
+</ul>
+</div>
+
+<p class="quiet">
+Nothing needs to be installed first. The program downloads everything it needs by itself.
+</p>
+
+<hr>
+
+<h2>The steps</h2>
+
+<div class="step">
+  <div class="num">1</div>
+  <div class="txt">
+    The files have already been unpacked into a folder called <span class="file">AAPS</span>.
+    <br>
+    It sits next to the file you clicked.
+    <br><br>
+    You can move that folder wherever suits you.
+    <span class="big">Documents</span> is a fine place.
+    <br>
+    <span class="quiet">No Administrator rights needed. It copes on its own even if the folder is inside OneDrive, and even if your user name uses non-English letters.</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">2</div>
+  <div class="txt">
+    Do you already have <span class="file">aaps-keystore.jks</span> from a previous build?
+    <br>
+    Do you also have <span class="file">keystore.properties</span>? Copy that one too.
+    <br><br>
+    <span class="big">Note exactly where they go:</span>
+    <br>
+    Both files must sit <span class="big">next to</span>
+    <span class="file">Build-AAPS.bat</span>
+    <br>
+    <span class="big">and NOT</span> inside the folder
+    <span class="file">AAPS-Builder-Files</span>
+    <br><br>
+    <span class="quiet">If you do put them inside by mistake, the program notices and moves them back out for you.</span>
+    <br>
+    <span class="quiet">If you have no key at all, that is perfectly fine. A new one will be created.</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">3</div>
+  <div class="txt">
+    Double-click the file:
+    <br>
+    <span class="file">Build-AAPS.bat</span>
+    <br>
+    <span class="quiet">A black window opens with a lot of text. That is normal.</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">4</div>
+  <div class="txt">
+    A window opens with a <span class="big">legal disclaimer</span>.
+    <br>
+    Read it to the end.
+    <br><br>
+    Tick the <span class="big">checkbox</span> that says
+    <br>
+    "I have read and understood the above, and I accept full responsibility."
+    <br><br>
+    Only then does the <span class="big">I Agree</span> button light up. Click it.
+    <br>
+    <span class="quiet">The other button is "I Do Not Agree" - it closes everything and builds nothing.</span>
+    <br>
+    <span class="quiet">This window appears on every run. That is deliberate.</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">5</div>
+  <div class="txt">
+    The program asks you one question:
+    <br><br>
+    <span class="big">1</span> = phone app
+    <br>
+    <span class="big">2</span> = smartwatch app
+    <br>
+    <span class="big">3</span> = both
+    <br><br>
+    Press the number, then <span class="big">Enter</span>.
+    <br>
+    <span class="quiet">Most people choose 1.</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">6</div>
+  <div class="txt">
+    Does your key file hold <span class="big">several keys</span>?
+    <br>
+    A numbered list appears. Press the number of the key, then Enter.
+    <br><br>
+    <span class="big">Important:</span> pick the SAME key you used last time,
+    or the phone will refuse to install the update.
+    <br><br>
+    <span class="quiet">If there is only one key, you are asked nothing.</span>
+    <br>
+    <span class="quiet">If that key has its own separate password, you will be asked for it too.</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">7</div>
+  <div class="txt">
+    If you have no key, you are asked to invent a <span class="big">password</span>.
+    <br>
+    Type a password, then type it again.
+    <br>
+    <span class="quiet">Nothing appears on screen while you type. That is normal.</span>
+    <br>
+    <span class="big">Write the password on paper and keep it.</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">8</div>
+  <div class="txt">
+    Now <span class="big">wait</span>.
+    <br>
+    Go and do something else. The first time takes about an hour.
+    <br>
+    <span class="quiet">Do not close the black window.</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">9</div>
+  <div class="txt">
+    When it finishes the window says <span class="big">DONE</span> in green,
+    and a folder opens showing the new file.
+  </div>
+</div>
+
+<hr>
+
+<div class="card warn">
+<h2>Where the files must sit</h2>
+<p>It should look like this:</p>
+<pre style="direction:ltr;text-align:left;font-family:'Courier New',monospace;font-size:19px;line-height:1.8;background:#FFFBF2;border:2px solid #B9A981;border-radius:10px;padding:16px 18px;overflow-x:auto;">
+AAPS\
+ |
+ |-- Build-AAPS.bat          &lt;-- you click this
+ |-- TEST-FIRST.bat
+ |-- README.html
+ |
+ |-- <b>aaps-keystore.jks</b>       &lt;-- <b>HERE!</b>
+ |-- <b>keystore.properties</b>     &lt;-- <b>HERE!</b>
+ |-- AAPS-phone-....apk
+ |
+ \-- AAPS-Builder-Files\     &lt;-- leave alone
+</pre>
+<p class="big">
+Both key files sit next to Build-AAPS.bat.
+</p>
+<p>
+<span class="big">Not</span> inside <span class="file">AAPS-Builder-Files</span>.
+<br>
+<span class="big">Not</span> in some other folder.
+</p>
+<p class="quiet">
+That is deliberate - so you see them, and remember to back them up.
+</p>
+<p class="big">
+But do not settle for the copy that lives here -
+copy them somewhere else entirely as well.
+</p>
+</div>
+
+<div class="card good">
+<h2>Finished. What now?</h2>
+<p>
+The folder now holds a file named roughly like this:
+</p>
+<p><span class="file">AAPS-phone-3.4.2.6-2026-08-17.apk</span></p>
+<p>
+Move that file to your phone.
+<br>
+By USB cable, by emailing it to yourself, or via Google Drive.
+</p>
+<p>
+On the phone, tap the file and confirm the installation.
+</p>
+</div>
+
+<div class="card warn">
+<h2>Very important. Do not skip this</h2>
+<p>After the build, <span class="big">next to Build-AAPS.bat</span> there are two files:</p>
+<p>
+<span class="file">aaps-keystore.jks</span>
+<br>
+<span class="file">keystore.properties</span>
+</p>
+<p class="big">Copy both of them somewhere else - outside this folder!</p>
+
+<p>
+<span class="big">Why outside the folder?</span>
+<br>
+Because if you delete the AAPS folder to free up space,
+or the PC dies, or you replace the PC -
+the key is gone <span class="big">forever</span>.
+<br>
+There is no way to recover it. Not for anyone.
+</p>
+
+<p>Copy it where? To at least two of these:</p>
+<ul>
+  <li>A USB stick</li>
+  <li>Google Drive / Dropbox</li>
+  <li>Email it to yourself</li>
+  <li>Another computer at home</li>
+</ul>
+
+<p class="quiet">
+A copy that lives only inside the AAPS folder on the same PC is not a backup.
+</p>
+<p>
+<span class="big">Why?</span>
+<br>
+Next time you update AAPS, the phone checks that it is the same key.
+</p>
+<p>
+If the key is lost, the phone will not let you install the update.
+<br>
+You would have to uninstall AAPS and lose all your settings and history.
+</p>
+<p class="quiet">
+And do not send these files to anyone. Whoever holds them can sign apps as you.
+</p>
+</div>
+
+<hr>
+
+<h2>How do you update next time?</h2>
+
+<div class="card warn">
+<p class="big">Before anything else, check both files are in place:</p>
+<p>
+<span class="file">aaps-keystore.jks</span>
+and
+<span class="file">keystore.properties</span>
+<br>
+must be <span class="big">next to</span> <span class="file">Build-AAPS.bat</span>.
+</p>
+<p class="quiet">
+If they are not there, a NEW key is created - and the phone will refuse the update.
+</p>
+</div>
+
+<div class="card">
+<p>
+Exactly the same. Double-click <span class="file">Build-AAPS.bat</span>.
+</p>
+<p>
+It downloads the new version of AAPS by itself,
+checks by itself whether newer tools are needed,
+and uses your key by itself.
+</p>
+<p class="big">The second time is much faster.</p>
+</div>
+
+<hr>
+
+<div class="card stop">
+<h2>Something did not work?</h2>
+<ul>
+  <li>Look at the last lines in the black window.</li>
+  <li>The folder <span class="file">AAPS-Builder-Files</span> contains <span class="file">build-log.txt</span>. Send it to whoever is helping you.</li>
+  <li>
+    Most problems are solved like this:
+    <br>
+    Open <span class="file">AAPS-Builder-Files</span>,
+    <br>
+    delete <span class="file">aaps-tools</span> and <span class="file">AndroidAPS</span> inside it,
+    <br>
+    and run it again.
+  </li>
+</ul>
+<p class="big">Never delete aaps-keystore.jks!</p>
+<p class="quiet">
+And before deleting anything, make sure a copy of the key exists
+somewhere else, outside this folder.
+</p>
+</div>
+
+<hr>
+
+<h2>What is in the folder?</h2>
+
+<div class="card">
+<p>You should see only these:</p>
+<ul>
+  <li><span class="file">Build-AAPS.bat</span> - the thing you click</li>
+  <li><span class="file">README.html</span> - this page</li>
+  <li><span class="file">AAPS-Builder-Files</span> - a folder. <span class="big">Do not touch it.</span></li>
+</ul>
+<p>After the build these are added:</p>
+<ul>
+  <li>The APK file</li>
+  <li><span class="file">aaps-keystore.jks</span> - your key</li>
+  <li><span class="file">keystore.properties</span> - your password</li>
+</ul>
+<p class="quiet">
+Everything else - the tools, the source code, the logs - is hidden inside AAPS-Builder-Files so it does not confuse you.
+</p>
+</div>
+
+<hr>
+
+<h2>A few more things</h2>
+
+<div class="card">
+<ul>
+  <li>Android Studio is <span class="big">not</span> needed. It is never used.</li>
+  <li>Administrator rights are <span class="big">not</span> needed.</li>
+  <li>Nothing is installed into Windows. Everything stays inside this folder.</li>
+  <li>Want it all gone? Just delete the folder. (Save the key first!)</li>
+</ul>
+</div>
+
+<div class="card">
+<p class="quiet">
+AAPS is a system that delivers insulin.
+<br>
+Building the file is only the beginning.
+<br>
+You must read the official documentation and complete the Objectives before real use:
+<br>
+<span dir="ltr">androidaps.readthedocs.io</span>
+</p>
+</div>
+
+</div>
+</body>
+</html>

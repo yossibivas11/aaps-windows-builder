@@ -1,0 +1,195 @@
+==============================================================
+ AAPS (AndroidAPS) - build your own APK on Windows
+==============================================================
+
+HOW TO USE IT
+-------------
+1. Put this folder wherever you like - Documents is fine.
+   You do NOT need C:\ and you do NOT need Administrator.
+   The script works out for itself where it is safe to build.
+2. If you already have a signing key from a previous build, copy
+   BOTH files in now:
+
+       aaps-keystore.jks
+       keystore.properties
+
+   They go NEXT TO Build-AAPS.bat - NOT inside the
+   AAPS-Builder-Files folder:
+
+       AAPS\
+        |-- Build-AAPS.bat          <-- you click this
+        |-- TEST-FIRST.bat
+        |-- README.html
+        |-- aaps-keystore.jks       <-- HERE
+        |-- keystore.properties     <-- HERE
+        \-- AAPS-Builder-Files\     <-- leave alone
+
+   (If you drop them inside AAPS-Builder-Files by mistake, the
+   script detects that and moves them out for you.)
+3. Double-click:   Build-AAPS.bat
+4. A legal notice appears. Tick the confirmation box, then click
+   "I Agree". The button stays disabled until the box is ticked.
+   "I Do Not Agree" (or Esc, or the X) exits without building.
+   It appears on every run.
+5. Answer one question: phone app, watch app, or both.
+6. Key handling:
+   - No key yet -> you invent a password once, a key is created.
+   - Key file with ONE key -> nothing to choose.
+   - Key file with SEVERAL keys -> a numbered list appears; pick the
+     SAME key you used for previous builds or the phone will refuse
+     the update. If that key has its own password, you are asked
+     for it separately from the file's password.
+   All of it is remembered, so later runs ask nothing.
+7. Wait. The first run can take 30-90 minutes and downloads
+   several GB.
+8. When it says DONE, the APK appears NEXT TO Build-AAPS.bat and
+   Windows Explorer opens on it.
+
+
+ABOUT WHERE IT BUILDS
+---------------------
+Your APK, your key and the log always stay in this folder.
+
+The build itself needs ~30 GB of scratch space in a folder that
+is (a) writable without Administrator, (b) free of non-English
+characters, because Gradle and the JDK break on them, and
+(c) NOT synced to OneDrive / Dropbox / Google Drive, because
+sync corrupts builds and would upload ~20 GB of junk.
+
+The script tries, in order:
+   1. this folder
+   2. %LOCALAPPDATA%\AAPS-Build
+   3. C:\Users\Public\AAPS-Build
+   4. C:\AAPS-Build
+and tells you which one it picked. If it picked a different
+folder, that folder is only a workspace - you can delete it any
+time and the next run will simply rebuild it.
+
+So: Documents works. Documents inside OneDrive also works - the
+script just moves the heavy part somewhere sane. A Hebrew
+username also works, for the same reason.
+
+
+WHAT YOU NEED
+-------------
+* 64-bit Windows 10 or 11
+* About 30 GB free disk space
+* 16 GB RAM recommended (8 GB works, just slower)
+* An internet connection
+* NO Administrator rights
+* NO Android Studio - it is not used at all
+* NO PowerShell install - if the PC only has the old Windows
+  PowerShell 5.1, the script fetches a portable PowerShell 7 into
+  its own tools folder and restarts itself under it. Nothing is
+  installed into Windows.
+
+
+VERY IMPORTANT - THE SIGNING KEY
+--------------------------------
+The script creates two files NEXT TO Build-AAPS.bat:
+
+    aaps-keystore.jks      <- your signing key
+    keystore.properties    <- its password, saved so you are
+                              not asked again
+
+That location is deliberate. They sit in the visible folder, not
+hidden inside AAPS-Builder-Files, so that you actually see them
+and remember to back them up. When you rebuild on another PC,
+both files must be put back in that same place - next to
+Build-AAPS.bat - before you run it.
+
+BACK BOTH UP SOMEWHERE OUTSIDE THIS FOLDER.
+
+A copy that lives only inside the AAPS folder is not a backup.
+Delete that folder to reclaim disk space, replace the PC, or have
+the drive fail, and the key is gone permanently - it cannot be
+regenerated or recovered by anyone.
+
+Copy both files to at least two of:
+    - a USB stick
+    - Google Drive / Dropbox
+    - an email to yourself
+    - another computer
+
+Every future AAPS update MUST be signed with the SAME key. If you
+lose it, Android will refuse to install the update over the top and
+you would have to uninstall AAPS first - losing your settings and
+history. Anyone who has both files can sign apps as you, so do not
+share them.
+
+
+STAYING UP TO DATE
+------------------
+First check that aaps-keystore.jks and keystore.properties are
+still sitting next to Build-AAPS.bat. If they are not, the script
+makes a NEW key and the phone will refuse to install the update
+over your existing AAPS.
+
+Then just double-click Build-AAPS.bat again.
+
+Every run it re-reads the AAPS source code to find out which Java
+version, which Android SDK platform and which build-tools that
+particular AAPS version needs, and installs or replaces them
+automatically. Gradle and the Android Gradle Plugin come from the
+source tree itself. So when AAPS raises a requirement, the script
+follows it without you doing anything.
+
+(Android Studio version numbers in the AAPS docs are irrelevant
+here - this is the command-line build and Studio is never used.)
+
+
+FILES AND FOLDERS
+-----------------
+The visible folder is kept deliberately bare:
+
+  Build-AAPS.bat          double-click this
+  README.html             instructions
+  AAPS-Builder-Files\     everything else - leave it alone
+
+After a build, these appear next to the .bat:
+
+  AAPS-phone-<ver>.apk    the app
+  aaps-keystore.jks       your key - BACK IT UP
+  keystore.properties     your password - BACK IT UP
+
+Inside AAPS-Builder-Files:
+
+  Build-AAPS.ps1          the actual work
+  build-log.txt           log of the last run
+  build-log-gradle.txt    full Gradle output
+  DISCLAIMER.txt          the legal notice
+  aaps-tools\             Java, Git, Android SDK
+  AndroidAPS\             the source code
+
+The key and its password sit next to the .bat ON PURPOSE - they are
+the one thing you must notice and back up. If you drop an existing
+key inside AAPS-Builder-Files by mistake, the script moves it out.
+
+To remove everything: delete AAPS-Builder-Files. Before deleting
+anything, make sure a copy of aaps-keystore.jks and
+keystore.properties exists somewhere outside this folder.
+
+
+IF SOMETHING GOES WRONG
+-----------------------
+* Read the last lines in the black window.
+* Send AAPS-Builder-Files\build-log.txt to whoever is helping you.
+* Most problems are fixed by deleting the "aaps-tools" and
+  "AndroidAPS" folders inside AAPS-Builder-Files and running again.
+  Do NOT delete aaps-keystore.jks, and do not delete the whole
+  AAPS folder unless the key is backed up elsewhere first.
+
+
+DISCLAIMER
+----------
+See DISCLAIMER.txt. In short: AAPS is not an approved
+medical device, this script is provided AS IS with no warranty of
+any kind, and all use is entirely at your own risk. The author
+accepts no liability whatsoever.
+
+Building the APK is only the first step - read the AAPS
+documentation and complete the objectives at
+https://androidaps.readthedocs.io before using it to dose insulin.
+This script only automates the official CLI build described at
+https://androidaps.readthedocs.io/en/latest/SettingUpAaps/CLIBuild.html
+==============================================================
