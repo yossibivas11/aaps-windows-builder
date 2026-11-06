@@ -14,10 +14,17 @@ Gradle. This project automates all of it for someone who is not.
 
 ## Quick start
 
-1. Download **[START-HERE.bat](START-HERE.bat)**
-2. Save it to your Desktop or Documents and double-click it
-3. It unpacks itself, opens the instructions, and waits
-4. Read the instructions, then double-click `Build-AAPS.bat`
+Download one file, save it to your Desktop or Documents, and double-click it.
+It unpacks itself, opens the instructions, and waits. Read them, then
+double-click `Build-AAPS.bat`.
+
+| Language | Download |
+|---|---|
+| English | **[START-HERE.bat](START-HERE.bat)** |
+| Hebrew | **[AndroidAPS-Builder-HE.bat](AndroidAPS-Builder-HE.bat)** |
+
+The Hebrew file opens the instructions in Hebrew (`קרא-אותי.html`). The English
+file opens them in English. Both build the same AAPS app.
 
 The first run takes roughly 30–90 minutes and downloads several GB. Later runs
 are much faster.
@@ -82,24 +89,29 @@ Anyone holding both files can sign apps as you, so do not share them.
 ## Repository layout
 
 ```
-START-HERE.bat          self-extracting distributable (this is what users download)
+START-HERE.bat              English self-extracting distributable
+AndroidAPS-Builder-HE.bat   Hebrew self-extracting distributable
 src/
-  Build-AAPS.ps1        the build engine
-  Build-AAPS.bat        launcher
-  TEST-FIRST.bat        one-minute machine check
-  README.html           end-user instructions
-  READ-ME-FIRST.txt     plain-text instructions
+  Build-AAPS.ps1            the English build engine
+  Build-AAPS.bat            launcher
+  TEST-FIRST.bat            one-minute machine check
+  README.html               English end-user instructions
+  READ-ME-FIRST.txt         English plain-text instructions
 tools/
-  build-sfx.py          regenerates START-HERE.bat from src/
+  build-sfx.py              regenerates START-HERE.bat from src/
 ```
 
-`START-HERE.bat` is a plain text batch file with the payload appended as base64.
-Deliberately **not** a self-extracting `.exe`: an unsigned executable that
-downloads and runs things triggers SmartScreen's full-screen block and antivirus
-false positives, which is far more alarming to a non-technical user than a
-batch file.
+`START-HERE.bat` and `AndroidAPS-Builder-HE.bat` are plain text batch files with
+the payload appended as base64. Deliberately **not** a self-extracting `.exe`:
+an unsigned executable that downloads and runs things triggers SmartScreen's
+full-screen block and antivirus false positives, which is far more alarming to
+a non-technical user than a batch file.
 
-To rebuild it after changing anything in `src/`:
+`AndroidAPS-Builder-HE.bat` is the Hebrew package: the Hebrew build script, the
+Hebrew guide, and Hebrew plain-text instructions. It is stored here as a
+finished file.
+
+To rebuild the English package after changing anything in `src/`:
 
 ```
 python tools/build-sfx.py
