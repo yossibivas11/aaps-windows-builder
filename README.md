@@ -111,6 +111,12 @@ python tools/build-sfx.py
 
 - **Dependency versions are read from the AAPS source at build time**, not hard-coded,
   so an upstream JDK or SDK bump is picked up automatically.
+- **Android SDK platform package names are resolved from Google's listing.**
+  From API 37 on, the package is `platforms;android-37.0` (then `.1`, `.2`, …).
+  There is no `platforms;android-37`, and asking for that name fails. The script
+  picks the plain name when it exists, otherwise the `.0` release, otherwise the
+  newest stable minor. An old install marker that recorded the missing name is
+  not trusted.
 - **AAPS pins `org.gradle.workers.max=12`** regardless of your CPU. This overrides it
   with your real core count, and scales heap and worker count to available RAM.
 - **A workspace is chosen automatically** — the build needs a path that is writable

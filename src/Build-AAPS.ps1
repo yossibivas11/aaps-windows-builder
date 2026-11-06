@@ -175,6 +175,28 @@ function Invoke-Tool {
 # the value in literal quotes makes cmd pass it through in one piece.
 function Quote-Pkg { param([string]$Name) return ('"' + $Name + '"') }
 
+# From API 37 on, Google names SDK platforms with a minor version:
+# "platforms;android-37.0", "-37.1", ... - there is NO plain "platforms;android-37"
+# and asking for it fails with "Failed to find package". So compileSdk = 37 has
+# to be matched against what the SDK listing really offers. Preference: the
+# plain name (API 36 and older), then the ".0" release, then the newest stable
+# minor. Betas, previews and "-extNN" variants are never picked.
+function Resolve-PlatformPackage {
+    param([int]$Api, [string]$Listing)
+    if ($Listing) {
+        $names = [regex]::Matches($Listing, "platforms;(android-$Api(?:\.\d+)?)(?=[\s|])") |
+                 ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+        if ($names -contains "android-$Api")   { return "platforms;android-$Api" }
+        if ($names -contains "android-$Api.0") { return "platforms;android-$Api.0" }
+        $minor = $names | Where-Object { $_ -match "^android-$Api\.\d+$" } |
+                 Sort-Object { [int]($_ -replace "^android-$Api\.", '') } -Descending | Select-Object -First 1
+        if ($minor) { return "platforms;$minor" }
+    }
+    # No usable listing: guess from the naming rule.
+    if ($Api -ge 37) { return "platforms;android-$Api.0" }
+    return "platforms;android-$Api"
+}
+
 function Test-KeyPassword {
     param([string]$Keytool, [string]$JavaHome, [string]$Keystore,
           [string]$StorePass, [string]$Alias, [string]$KeyPass, [string[]]$EnglishArgs,
@@ -204,16 +226,19 @@ function Test-KeyPassword {
 # This does the same job over PowerShell's network stack instead: read the
 # index, pick the exact archives, download and unpack them into place.
 function Install-SdkPackagesDirect {
-    param([string]$SdkRoot, [string]$DownloadDir, [int]$Platform, [string]$BuildTools)
+    param([string]$SdkRoot, [string]$DownloadDir, [string]$PlatformPkg, [string]$BuildTools)
 
     $base = 'https://dl.google.com/android/repository/'
     Say '    fetching the Android package index directly ...'
     [xml]$repo = (Invoke-WebRequest ($base + 'repository2-3.xml') -UseBasicParsing -TimeoutSec 120).Content
 
+    # $PlatformPkg is the real id, e.g. "platforms;android-37.0", and the SDK
+    # folder uses that same leaf name.
+    $platLeaf = $PlatformPkg -replace '^platforms;', ''
     $wanted = @(
-        @{ Path = "platforms;android-$Platform"; Dest = (Join-Path $SdkRoot "platforms\android-$Platform") },
-        @{ Path = "build-tools;$BuildTools";     Dest = (Join-Path $SdkRoot "build-tools\$BuildTools") },
-        @{ Path = 'platform-tools';              Dest = (Join-Path $SdkRoot 'platform-tools') }
+        @{ Path = $PlatformPkg;                      Dest = (Join-Path $SdkRoot "platforms\$platLeaf") },
+        @{ Path = "build-tools;$BuildTools";         Dest = (Join-Path $SdkRoot "build-tools\$BuildTools") },
+        @{ Path = 'platform-tools';                  Dest = (Join-Path $SdkRoot 'platform-tools') }
     )
 
     foreach ($w in $wanted) {
@@ -743,6 +768,13 @@ if ($SelfTest) {
             [bool](($out -join "`n") -match 'ARG=platforms;android-36')
         }
         }
+        T 'SDK platform names with a minor version (android-37.0) are resolved' {
+            $l = "  platforms;android-36    | 2 | x`n  platforms;android-36-ext19 | 1 | x`n" +
+                 "  platforms;android-37.0  | 2 | x`n  platforms;android-37.2 | 2 | x`n  platforms;android-37.2-beta3 | 3 | x"
+            (Resolve-PlatformPackage -Api 37 -Listing $l) -eq 'platforms;android-37.0' -and
+            (Resolve-PlatformPackage -Api 36 -Listing $l) -eq 'platforms;android-36' -and
+            (Resolve-PlatformPackage -Api 37 -Listing '') -eq 'platforms;android-37.0'
+        }
         T 'a window can be shown (needed for the legal notice)' {
             try { Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop; $true } catch { 'WARN' }
         }
@@ -1028,30 +1060,53 @@ $sdkEnv = @{ JAVA_HOME = $JavaHome; ANDROID_HOME = $SdkDir; ANDROID_SDK_ROOT = $
 # ---- 6d. (No '--update' call. It crashes some tool versions outright and the
 #          exact packages needed are installed explicitly below anyway.)
 
-# ---- 6e. Pick the newest stable build-tools that match the required platform
-if (-not $ReqBuildTools) {
-    Say "    looking up the newest build-tools for android-$ReqPlatform ..."
-    try {
-        $listing = Invoke-Tool -Exe $sdkMgr -WorkDir $SdkDir -EnvVars $sdkEnv -Quiet -Arguments @("--sdk_root=$SdkDir",'--list','--channel=0')
-        $cands = [regex]::Matches(($listing -join "`n"), "build-tools;($ReqPlatform\.\d+\.\d+)") |
-                 ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique |
-                 Sort-Object { [version]$_ } -Descending
-        if ($cands) { $ReqBuildTools = $cands[0] }
-    } catch { Warn 'Could not list SDK packages through sdkmanager.' }
+# ---- 6e. Look up the exact platform package name and the newest stable
+#          build-tools that match the required platform.
+# From API 37 on Google publishes "platforms;android-37.0", not "android-37".
+Say "    looking up the SDK packages for android-$ReqPlatform ..."
+$listingTxt = $null
+try {
+    $listing = Invoke-Tool -Exe $sdkMgr -WorkDir $SdkDir -EnvVars $sdkEnv -Quiet -Arguments @("--sdk_root=$SdkDir",'--list','--channel=0')
+    $listingTxt = ($listing | ForEach-Object { "$_" }) -join "`n"
+} catch { Warn 'Could not list SDK packages through sdkmanager.' }
 
-    # sdkmanager may have failed for network reasons; Google's index is readable
-    # over PowerShell's network stack even when Java's is blocked.
-    if (-not $ReqBuildTools) {
-        try {
-            Say '    reading the package index directly instead ...'
-            [xml]$idx = (Invoke-WebRequest 'https://dl.google.com/android/repository/repository2-3.xml' -UseBasicParsing -TimeoutSec 120).Content
-            $cands2 = $idx.'sdk-repository'.remotePackage.path |
-                      Where-Object { $_ -match "^build-tools;$ReqPlatform\.\d+\.\d+$" } |
-                      ForEach-Object { $_ -replace '^build-tools;', '' } |
-                      Sort-Object { [version]$_ } -Descending
-            if ($cands2) { $ReqBuildTools = @($cands2)[0] }
-        } catch { }
-    }
+# sdkmanager may have failed for network reasons; Google's index is readable
+# over PowerShell's network stack even when Java's is blocked.
+$indexPaths = $null
+if (-not $listingTxt) {
+    try {
+        Say '    reading the package index directly instead ...'
+        [xml]$idx = (Invoke-WebRequest 'https://dl.google.com/android/repository/repository2-3.xml' -UseBasicParsing -TimeoutSec 120).Content
+        $indexPaths = @($idx.'sdk-repository'.remotePackage | ForEach-Object { [string]$_.path })
+        # Same "name | ..." shape the platform and build-tools matchers expect.
+        $listingTxt = ($indexPaths | ForEach-Object { "  $_ | 1 | index" }) -join "`n"
+    } catch { }
+}
+
+$PlatformPkg = Resolve-PlatformPackage -Api $ReqPlatform -Listing $listingTxt
+Ok "Using $PlatformPkg"
+
+if (-not $ReqBuildTools -and $listingTxt) {
+    # (?=[\s|]) skips release candidates such as "37.0.0-rc1".
+    # @() is required: a single match is a string, and $cands[0] would be its first character.
+    $cands = [regex]::Matches($listingTxt, "build-tools;($ReqPlatform\.\d+\.\d+)(?=[\s|])") |
+             ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique |
+             Sort-Object { [version]$_ } -Descending
+    if ($cands) { $ReqBuildTools = @($cands)[0] }
+}
+if (-not $ReqBuildTools -and -not $indexPaths) {
+    try {
+        Say '    reading the package index directly instead ...'
+        [xml]$idx = (Invoke-WebRequest 'https://dl.google.com/android/repository/repository2-3.xml' -UseBasicParsing -TimeoutSec 120).Content
+        $indexPaths = @($idx.'sdk-repository'.remotePackage | ForEach-Object { [string]$_.path })
+    } catch { }
+}
+if (-not $ReqBuildTools -and $indexPaths) {
+    $cands2 = $indexPaths |
+              Where-Object { $_ -match "^build-tools;$ReqPlatform\.\d+\.\d+$" } |
+              ForEach-Object { $_ -replace '^build-tools;', '' } |
+              Sort-Object { [version]$_ } -Descending
+    if ($cands2) { $ReqBuildTools = @($cands2)[0] }
 }
 if (-not $ReqBuildTools) {
     $ReqBuildTools = if ($ReqPlatform -ge 36) { "$ReqPlatform.0.0" } else { $FallbackBuildTool }
@@ -1060,38 +1115,58 @@ if (-not $ReqBuildTools) {
 Ok "Using build-tools $ReqBuildTools"
 
 # ---- 6f. Install exactly what is needed (marker makes reruns instant)
-$marker = Join-Path $SdkDir ".installed-$ReqPlatform-$ReqBuildTools"
-if (-not (Test-Path $marker)) {
+# The marker carries the real package name, so a marker left behind by an older
+# run that asked for a name that does not exist (android-37) is not trusted.
+$marker = Join-Path $SdkDir (".installed-" + ($PlatformPkg -replace '^platforms;', '') + "-$ReqBuildTools")
+# Each installed package records its own name in package.xml - check that rather
+# than guessing the folder name.
+$platPresent = [bool](Get-ChildItem (Join-Path $SdkDir 'platforms') -Filter 'package.xml' -Recurse -Depth 1 -ErrorAction SilentlyContinue |
+               Select-String -SimpleMatch ('path="' + $PlatformPkg + '"') -List -ErrorAction SilentlyContinue)
+if (-not (Test-Path $marker) -or -not $platPresent) {
     Say '    installing SDK packages (slow the first time) ...'
     $sdkDone = $false
     try {
         Invoke-Tool -Exe $sdkMgr -WorkDir $SdkDir -EnvVars $sdkEnv -StdIn (,'y' * 40) -Arguments @(
             "--sdk_root=$SdkDir", 'platform-tools',
-            (Quote-Pkg "platforms;android-$ReqPlatform"), (Quote-Pkg "build-tools;$ReqBuildTools")) | Out-Null
+            (Quote-Pkg $PlatformPkg), (Quote-Pkg "build-tools;$ReqBuildTools")) | Out-Null
         $sdkDone = $true
     } catch {
         $why = "$($_.Exception.Message)"
-        if ($why -match '(?i)IO exception|manifest|source lists|Failed to find package|Connection|timed out|SSL|certificate') {
-            Warn 'The Android installer could not reach Google.'
-            Say  '    This is a network problem, not a problem with your PC:'
-            Say  '      - antivirus HTTPS scanning breaks Java downloads (very common)'
-            Say  '      - a company/school proxy or a filtering router blocks it'
-            Say  '    Downloading the same packages directly instead - this usually works.'
-        } else {
-            Warn "The Android installer failed ($($why.Split([char]10)[0])). Trying a direct download instead."
+        # A missing build-tools revision is not a network failure. Install the
+        # platform on its own and let Gradle fetch the rest.
+        if ($why -match '(?i)Failed to find package' -and $why -match '(?i)build-tools') {
+            Warn "build-tools $ReqBuildTools was rejected - installing the platform only and letting Gradle pick the rest."
+            try {
+                Invoke-Tool -Exe $sdkMgr -WorkDir $SdkDir -EnvVars $sdkEnv -StdIn (,'y' * 40) -Arguments @(
+                    "--sdk_root=$SdkDir", 'platform-tools', (Quote-Pkg $PlatformPkg)) | Out-Null
+                $sdkDone = $true
+            } catch {
+                $why = "$($_.Exception.Message)"
+            }
         }
-        try {
-            Install-SdkPackagesDirect -SdkRoot $SdkDir -DownloadDir $DlDir -Platform $ReqPlatform -BuildTools $ReqBuildTools
-            $sdkDone = $true
-        } catch {
-            Fail ("Could not install the Android SDK.`n" +
-                  " Reason: $($_.Exception.Message)`n`n" +
-                  " Almost always one of these:`n" +
-                  "   1. Antivirus is inspecting HTTPS traffic. Turn that off, or add an`n" +
-                  "      exception for dl.google.com, and run again.`n" +
-                  "   2. You are on a company or school network that blocks it. Try a`n" +
-                  "      home network or a phone hotspot.`n" +
-                  "   3. dl.google.com was temporarily unreachable. Simply try again later.")
+        if (-not $sdkDone) {
+            if ($why -match '(?i)IO exception|manifest|source lists|Failed to find package|Connection|timed out|SSL|certificate') {
+                Warn 'The Android installer could not reach Google.'
+                Say  '    This is a network problem, not a problem with your PC:'
+                Say  '      - antivirus HTTPS scanning breaks Java downloads (very common)'
+                Say  '      - a company/school proxy or a filtering router blocks it'
+                Say  '    Downloading the same packages directly instead - this usually works.'
+            } else {
+                Warn "The Android installer failed ($($why.Split([char]10)[0])). Trying a direct download instead."
+            }
+            try {
+                Install-SdkPackagesDirect -SdkRoot $SdkDir -DownloadDir $DlDir -PlatformPkg $PlatformPkg -BuildTools $ReqBuildTools
+                $sdkDone = $true
+            } catch {
+                Fail ("Could not install the Android SDK.`n" +
+                      " Reason: $($_.Exception.Message)`n`n" +
+                      " Almost always one of these:`n" +
+                      "   1. Antivirus is inspecting HTTPS traffic. Turn that off, or add an`n" +
+                      "      exception for dl.google.com, and run again.`n" +
+                      "   2. You are on a company or school network that blocks it. Try a`n" +
+                      "      home network or a phone hotspot.`n" +
+                      "   3. dl.google.com was temporarily unreachable. Simply try again later.")
+            }
         }
     }
     if (-not $sdkDone) { Fail 'The Android SDK could not be installed.' }
