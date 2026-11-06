@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild START-HERE.bat from the files in src/.
+"""Rebuild AndroidAPS-Builder-EN.bat from the files in src/.
 
 The launcher is the existing batch header plus a base64 zip of what a user
 needs. Run from the repository root or from anywhere:
@@ -13,7 +13,7 @@ import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
-OUT = os.path.join(ROOT, 'START-HERE.bat')
+OUT = os.path.join(ROOT, 'AndroidAPS-Builder-EN.bat')
 
 # Internal zip names, in a stable order.
 FILES = [
@@ -37,7 +37,7 @@ def main():
     parts = text.splitlines(keepends=True)
     markers = [i for i, line in enumerate(parts) if line.startswith('::PAYLOAD::')]
     if not markers:
-        raise SystemExit('marker line not found in START-HERE.bat')
+        raise SystemExit('marker line not found in AndroidAPS-Builder-EN.bat')
     # The marker also appears inside the helper script, so cut at the line
     # that starts with it, not at the first occurrence anywhere.
     header = ''.join(parts[:markers[0] + 1])

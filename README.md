@@ -20,7 +20,7 @@ double-click `Build-AAPS.bat`.
 
 | Language | Download |
 |---|---|
-| English | **[START-HERE.bat](START-HERE.bat)** |
+| English | **[AndroidAPS-Builder-EN.bat](AndroidAPS-Builder-EN.bat)** |
 | Hebrew | **[AndroidAPS-Builder-HE.bat](AndroidAPS-Builder-HE.bat)** |
 
 The Hebrew file opens the instructions in Hebrew (`קרא-אותי.html`). The English
@@ -89,7 +89,7 @@ Anyone holding both files can sign apps as you, so do not share them.
 ## Repository layout
 
 ```
-START-HERE.bat              English self-extracting distributable
+AndroidAPS-Builder-EN.bat   English self-extracting distributable
 AndroidAPS-Builder-HE.bat   Hebrew self-extracting distributable
 src/
   Build-AAPS.ps1            the English build engine
@@ -98,10 +98,10 @@ src/
   README.html               English end-user instructions
   READ-ME-FIRST.txt         English plain-text instructions
 tools/
-  build-sfx.py              regenerates START-HERE.bat from src/
+  build-sfx.py              regenerates AndroidAPS-Builder-EN.bat from src/
 ```
 
-`START-HERE.bat` and `AndroidAPS-Builder-HE.bat` are plain text batch files with
+`AndroidAPS-Builder-EN.bat` and `AndroidAPS-Builder-HE.bat` are plain text batch files with
 the payload appended as base64. Deliberately **not** a self-extracting `.exe`:
 an unsigned executable that downloads and runs things triggers SmartScreen's
 full-screen block and antivirus false positives, which is far more alarming to
